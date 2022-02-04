@@ -62,10 +62,20 @@ def floor_timestamp(df, column, freq="T"):
 
     return df
 
+def extract_numerical_values_from_pd_timedelta(df, column):
+    """Pandas Timedelta extract numerical hour values"""
+    
+    return df[column].dt.total_seconds()/60/60
+
 def get_index_of_max(df, column):
     """ get index of max value """
     
     return df[column].idxmax()
+
+def count_freq_of_value_occurence(df, column):
+    """ Count the Frequency a Value Occurs in Pandas Dataframe """
+    
+    return df[column].value_counts() 
 
 def filter_with_multiple_conditions(df, cond1, cond2):
     """ 
@@ -93,3 +103,67 @@ def update_row_values_based_on_condition(df, cond, connecting_column, desired_va
 
     return df_copy
 
+def create_new_id_column_with_range(df, to_id_column):
+    """ 
+    Create ID with range 
+    Background: For plotting ids on the axis 
+    """ 
+    df[to_id_column+"_id"] = pd.Series("#" + str(i) for i in range(len(df)))
+    # In case this returns nan values:
+    # df[to_id_column] = pd.Series("#" + str(i) for i in range(len(df))).values
+
+    return df
+
+
+def convert_string_series_to_unique_int_ids(df, column):
+    """Convert pandas series from string to unique int ids"""
+    df[column] = df[column].astype('category').cat.codes
+    return df
+
+def assign_value_depending_on_other_df(df, df1, condition, value):
+    """ 
+    Assign value depending on another dataframe.
+    condition must be a "shared" column between these two dfs
+    """
+
+    df[value] = df[condition].map(df1.set_index(condition)[value])
+    # Series
+    # df[value] = df[condition].map(df1)
+
+    return df
+
+
+def set_value_of_one_column_based_on_value_in_other_column(df, cond, origin_column, target_column):
+    """ 
+    Set value of one column based on value in another column 
+    example:
+        - cond: df_copy['bat_cap'] < df_copy['energy']
+        - origin_column: "energy"
+        - target column: "bat_cap"
+    """
+    df_copy = df.copy()
+    df_copy.loc[cond, target_column] = df_copy[origin_column]
+
+    return df_copy
+
+def set_new_values_in_column_based_on_multiple_condition(df):
+    """
+    Set new values in a column, based on multiple conditions/columns.
+    JUST EXEMPLARY HERE TO GET THE IDEA!
+    """
+    def func(x):
+        if pd.isna(x["outside_quartile_max"]):
+            bat_cap = x["upper_quartile"] * 1.3
+            
+        if not pd.isna(x["outside_quartile_max"]):
+            bat_cap = x["outside_quartile_max"] * 1.2
+            
+        if not pd.isna(x["upper_outlier"]):
+            bat_cap = x["upper_outlier"] * 1.1
+
+        return bat_cap
+
+    df['battery_capacity'] = df.apply(func, axis = 1)
+    
+    return df
+    
