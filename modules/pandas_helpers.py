@@ -13,6 +13,12 @@ def drop_specific_nan_rows(df, column):
 
     return df_copy
 
+def count_nan_values_in_series(df, column):
+    """ counts all the nan values within a pandas series """
+    
+    return len(df[np.isnan(df[column].values.tolist())])
+    
+
 def extract_float_from_str(df, column):
     """ Extract only float values from str column """
     df_copy = df.copy()
