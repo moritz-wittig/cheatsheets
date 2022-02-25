@@ -172,4 +172,26 @@ def set_new_values_in_column_based_on_multiple_condition(df):
     df['battery_capacity'] = df.apply(func, axis = 1)
     
     return df
+
+def timezone_localize(df, column):
+    """ Localize tz-naive index of a Series or DataFrame to target time zone """
+    
+    df_copy = df.copy()
+    # Transform series to datetime type
+    # Needs to be specified according to the input str
+    
+    df_copy[column] = pd.to_datetime(df_copy[column], format='%a, %d %b %Y %H:%M:%S GMT')
+
+    # In case there is e.g. a NonExistentTimeError, which is most likely to be due to DST switch (Daylight Saving Time/Sommerzeit), one
+    # option is to exclude these values
+
+    mask_1 =  ((df_copy[column]>datetime.strptime("2019-03-31 02:00:00","%Y-%m-%d %H:%S:%M")) & (df_copy[column]<datetime.strptime("2019-03-31 03:00:00","%Y-%m-%d %H:%S:%M")))
+
+    print(str(len(df_copy.loc[mask_1])) + " rows of the "  + column + " column is being deleted from the dataset, due to errors with DST")
+    df_copy = df_copy.loc[~mask_1]
+
+    # ambiguous="NaT" argument will return NaT where there are ambiguous times
+    df_copy[column] = df_copy[column].dt.tz_localize(tz = tz, ambiguous="NaT")
+
+    return df_copy
     
